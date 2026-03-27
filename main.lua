@@ -238,20 +238,6 @@ local SearchBox = Create("TextBox",{Parent = LeftPanel,BackgroundColor3 = Color3
 LogList.Position = UDim2.new(0, 0, 0, 30) 
 LogList.Size = UDim2.new(1, 0, 1, -30)
 
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    local query = string.lower(SearchBox.Text)
-    for _, v in next, logs do
-        if v.Log then
-            if query == "" or string.find(string.lower(v.Name), query) then
-                v.Log.Visible = true
-            else
-                v.Log.Visible = false
-            end
-        end
-    end
-    updateRemoteCanvas()
-end)
-
 local RightPanel = Create("Frame",{Parent = Background,BackgroundColor3 = Color3.fromRGB(37, 36, 38),BorderSizePixel = 0,Position = UDim2.new(0, 131, 0, 19),Size = UDim2.new(0, 319, 0, 249)})
 local CodeBox = Create("Frame",{Parent = RightPanel,BackgroundColor3 = Color3.new(0.0823529, 0.0745098, 0.0784314),BorderSizePixel = 0,Size = UDim2.new(0, 319, 0, 119)})
 local ScrollingFrame = Create("ScrollingFrame",{Parent = RightPanel,Active = true,BackgroundColor3 = Color3.new(1, 1, 1),BackgroundTransparency = 1,Position = UDim2.new(0, 0, 0.5, 0),Size = UDim2.new(1, 0, 0.5, -9),CanvasSize = UDim2.new(0, 0, 0, 0),ScrollBarThickness = 4})
@@ -896,6 +882,20 @@ end
 function updateRemoteCanvas()
     LogList.CanvasSize = UDim2.fromOffset(UIListLayout.AbsoluteContentSize.X, UIListLayout.AbsoluteContentSize.Y)
 end
+
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local query = string.lower(SearchBox.Text)
+    for _, v in next, logs do
+        if v.Log then
+            if query == "" or string.find(string.lower(v.Name), query) then
+                v.Log.Visible = true
+            else
+                v.Log.Visible = false
+            end
+        end
+    end
+    updateRemoteCanvas()
+end)
 
 --- Allows for toggling of the tooltip and easy setting of le description
 --- @param enable boolean
@@ -1730,10 +1730,42 @@ local newindex = function(method,originalfunction,...)
             local id = ThreadGetDebugId(remote)
             local blockcheck = tablecheck(blocklist,remote,id)
             local args = {select(2,...)}
-if spoofRules[remote.Name] then
-    for argIndex, newValue in next, spoofRules[remote.Name] do
-        args[argIndex] = newValue 
+local isSpoofed = false
+            if spoofRules[remote.Name] then
+                for argIndex, newValue in next, spoofRules[remote.Name] do
+                    args[argIndex] = newValue 
+                    isSpoofed = true
+                end
+            end
+
+            if not tablecheck(blacklist,remote,id) and not IsCyclicTable(args) then
+                local data = {
+                    method = method,
+                    remote = remote,
+                    args = deepclone(args),
+                    metamethod = "__index",
+                    blockcheck = blockcheck,
+                    id = id,
+                    returnvalue = {}
+                }
+
+                if configs.funcEnabled then
+                    data.infofunc = info(2,"f")
+                    local calling = getcallingscript()
+                    data.callingscript = calling and cloneref(calling) or nil
+                end
+
+                schedule(remoteHandler,data)
+            end
+            if blockcheck then return end
+            
+            
+            if isSpoofed then
+                return originalfunction(remote, unpack(args))
+            end
+        end
     end
+    return originalfunction(...)
 end
 
             if not tablecheck(blacklist,remote,id) and not IsCyclicTable(args) then
@@ -1795,25 +1827,25 @@ local newnamecall = newcclosure(function(...)
                 local id = ThreadGetDebugId(remote)
                 local blockcheck = tablecheck(blocklist,remote,id)
                 local args = {select(2,...)}
-if spoofRules[remote.Name] then
-    for argIndex, newValue in next, spoofRules[remote.Name] do
-        args[argIndex] = newValue 
-    end
-end
+                
+                local isSpoofed = false
+                if spoofRules[remote.Name] then
+                    for argIndex, newValue in next, spoofRules[remote.Name] do
+                        args[argIndex] = newValue 
+                        isSpoofed = true
+                    end
+                end
 
                 if not tablecheck(blacklist,remote,id) and not IsCyclicTable(args) then
                     local data = {
                         method = method,
                         remote = remote,
                         args = deepclone(args),
-                        infofunc = infofunc,
-                        callingscript = callingscript,
                         metamethod = "__namecall",
                         blockcheck = blockcheck,
                         id = id,
                         returnvalue = {}
                     }
-                    args = nil
 
                     if configs.funcEnabled then
                         data.infofunc = info(2,"f")
@@ -1825,20 +1857,27 @@ end
 
                     schedule(remoteHandler,data)
                     
-               if configs.logreturnvalues and remote:IsA("RemoteFunction") then
-    local thread = running()
-    
-    task.spawn(function(...)
-        local returnData = {originalfunction(remote, ...)}
-        data.returnvalue.data = returnData
-        
-        if selected == data then
-            codebox:setRaw(selected.GenScript .. "\n\n-- [SERVER RETURNED]:\n" .. v2s(returnData))
-        end
-    end, unpack(args))
-    
-    if blockcheck then return end
-end
+                    if configs.logreturnvalues and remote:IsA("RemoteFunction") then
+                        task.spawn(function(...)
+                            setnamecallmethod(method)
+                            local returnData = {originalnamecall(remote, ...)}
+                            data.returnvalue.data = returnData
+                            
+                            if selected == data then
+                                codebox:setRaw(selected.GenScript .. "\n\n-- [SERVER RETURNED]:\n" .. v2s(returnData))
+                            end
+                        end, unpack(args))
+                    end
+                end
+                
+                if blockcheck then return end
+                
+                
+                if isSpoofed then
+                    setnamecallmethod(method)
+                    return originalnamecall(remote, unpack(args))
+                end
+            end
         end
     end
     return originalnamecall(...)
