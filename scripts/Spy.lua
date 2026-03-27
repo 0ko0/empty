@@ -224,14 +224,13 @@ end
 local Highlight = (isfile and loadfile and isfile("Highlight.lua") and loadfile("Highlight.lua")()) or loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/refs/heads/main/SimpleSpyV3/highlight.lua"))()
 local LazyFix = loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/refs/heads/main/SimpleSpyV3/DataToCode.lua"))() -- Very lazy fix as I'm legit just pasting it from the rewrite
 
--- Bảng màu tối ưu độ tương phản (VSCode / Discord Theme)
 local Colors = {
-    Background = Color3.fromRGB(25, 25, 30), -- Nền chính
-    Panel = Color3.fromRGB(18, 18, 22),      -- Nền codebox/list
-    Border = Color3.fromRGB(45, 45, 50),     -- Viền
+    Background = Color3.fromRGB(25, 25, 30), 
+    Panel = Color3.fromRGB(18, 18, 22),      
+    Border = Color3.fromRGB(45, 45, 50),     
     Text = Color3.fromRGB(240, 240, 245),
     SubText = Color3.fromRGB(150, 150, 160),
-    Accent = Color3.fromRGB(88, 101, 242),   -- Xanh dương
+    Accent = Color3.fromRGB(88, 101, 242),   
     Red = Color3.fromRGB(250, 82, 82),
     Yellow = Color3.fromRGB(250, 176, 5),
     Green = Color3.fromRGB(18, 184, 134)
@@ -247,7 +246,7 @@ Create("UIStroke",{Color = Colors.Border, Thickness = 1, Parent = Background})
 local Shadow = Create("ImageLabel",{Parent = Background, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Position = UDim2.new(0.5, 0, 0.5, 0), Size = UDim2.new(1, 30, 1, 30), Image = "rbxassetid://6014261993", ImageColor3 = Color3.new(0,0,0), ImageTransparency = 0.5, SliceCenter = Rect.new(49, 49, 450, 450), ZIndex = -1})
 
 local TopBar = Create("Frame",{Parent = Background, BackgroundTransparency = 1, Size = UDim2.new(1, 0, 0, 30)})
-local Simple = Create("TextButton",{Parent = TopBar, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(0, 200, 1, 0), Font = Enum.Font.GothamBold, Text = "simplespy remake", TextColor3 = Colors.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
+local Simple = Create("TextButton",{Parent = TopBar, BackgroundTransparency = 1, Position = UDim2.new(0, 15, 0, 0), Size = UDim2.new(0, 200, 1, 0), Font = Enum.Font.GothamBold, Text = "SimpleSpy remake", TextColor3 = Colors.Text, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left})
 
 local ControlFrame = Create("Frame",{Parent = TopBar, BackgroundTransparency = 1, AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -10, 0.5, 0), Size = UDim2.new(0, 60, 0, 14)})
 Create("UIListLayout",{Parent = ControlFrame, FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Right, SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 6)})
@@ -291,7 +290,9 @@ Create("UIPadding", {Parent = ScrollingFrame, PaddingRight = UDim.new(0, 4)})
 local ToolTip = Create("Frame",{Parent = SimpleSpy3, BackgroundColor3 = Colors.Panel, Size = UDim2.new(0, 200, 0, 50), ZIndex = 100, Visible = false})
 Create("UICorner",{CornerRadius = UDim.new(0, 6), Parent = ToolTip})
 Create("UIStroke",{Color = Colors.Border, Thickness = 1, Parent = ToolTip})
-local TextLabel = Create("TextLabel",{Parent = ToolTip, BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0, 8),
+local TextLabel = Create("TextLabel",{Parent = ToolTip, BackgroundTransparency = 1, Position = UDim2.new(0, 8, 0, 8), Size = UDim2.new(1, -16, 1, -16), ZIndex = 101, Font = Enum.Font.GothamMedium, Text = "", TextColor3 = Colors.Text, TextSize = 12, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, TextYAlignment = Enum.TextYAlignment.Top})
+
+local AspectRatio = Create("UISizeConstraint", {Parent = Background, MinSize = Vector2.new(450, 280), MaxSize = Vector2.new(900, 600)})
 -------------------------------------------------------------------------------
 
 local selectedColor = Color3.new(0.321569, 0.333333, 1)
